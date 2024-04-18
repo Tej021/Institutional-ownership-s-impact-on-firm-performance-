@@ -1,0 +1,531 @@
+---
+title: "fin_model_Run"
+output: html_document
+date: "2024-04-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+#panel data creation
+
+```{r}
+library(reshape2)
+library(tidyverse)
+install.packages("writexl")
+library(writexl)
+id_columns <- c("Company Name", "Year")
+panel_data <- add_dataset%>%
+  pivot_longer(cols = -c(Year, 'Company Name'), names_to = "Variable", values_to = "Value") %>%
+  arrange(Variable, Year, 'Company Name')
+panel_data_wide <- panel_data %>%
+  pivot_wider(names_from = 'Company Name', values_from = Value)
+View(panel_data_wide)
+Final_Book1 <- "C:/Users/rishu/Downloads/Tobinsq.xlsx"
+write_xlsx(panel_data_wide, path = Final_Book1)
+merged <- merge(wide_panel_data,final_shareholder_panel,by.x= TRUE, by.y= TRUE)
+view(merged)
+
+length(wide_panel_data)
+length(final_shareholder_panel)
+```
+
+
+```{r}
+library(reshape2)
+library(tidyverse)
+install.packages("writexl")
+library(writexl)
+id_columns <- c("Company Name", "Year")
+panel_data <- mcap_data%>%
+  pivot_longer(cols = -c(Year, 'Company Name'), names_to = "Variable", values_to = "Value") %>%
+  arrange(Variable, Year, 'Company Name')
+panel_data_wide <- panel_data %>%
+  pivot_wider(names_from = 'Company Name', values_from = Value)
+View(panel_data_wide)
+Final_Book2 <- "C:/Users/rishu/Downloads/Mcap.xlsx"
+write_xlsx(panel_data_wide, path = Final_Book2)
+
+
+
+
+```
+
+
+#merge Function
+
+```{r}
+library(dplyr)
+#Assuming your first data frame is named 'df1' and the second is 'df2'
+merged_data <- dplyr::full_join(final_dummy_data, Mcap, by = c("Year", "Variable"))
+view(merged_data)
+```
+
+```{r}
+library(dplyr)
+#Assuming your first data frame is named 'df1' and the second is 'df2'
+Final_Data <- dplyr::full_join(merged_data, Tobinsq, by = c("Year", "Variable"))
+view(Final_Data)
+```
+
+
+
+```{r}
+final_dummy_data <- "C:/Users/rishu/Downloads/termpaper_data.xlsx"
+write_xlsx(Final_Data, path = final_dummy_data)
+
+```
+
+
+```{r}
+library(readxl)
+ final_dummy_data<- read_excel("C:/Users/rishu/Downloads/termpaper_data.xlsx")
+ View(final_dummy_data)
+```
+
+
+#Additional Variable for Tobinsq
+```{r}
+final_dummy_data$`Market Capitalisation`[is.na(final_dummy_data$`Market Capitalisation`)] <- 0
+final_dummy_data$`P/B`[is.na(final_dummy_data$`P/B`)] <- 0
+final_dummy_data$`Paid up preference capital (net of forfeited preference capital)`[is.na(final_dummy_data$`Paid up preference capital (net of forfeited preference capital)`)] <- 0
+final_dummy_data$`Total liabilities.y`[is.na(final_dummy_data$`Total liabilities.y`)] <- 0
+final_dummy_data$`Non-current liabilities`[is.na(final_dummy_data$`Non-current liabilities`)] <- 0
+final_dummy_data$`Current liabilities`[is.na(final_dummy_data$`Current liabilities`)] <- 0
+final_dummy_data$`Gross fixed assets depreciation during the year`[is.na(final_dummy_data$`Gross fixed assets depreciation during the year`)] <- 0
+View(final_dummy_data)
+```
+
+
+
+```{r cars}
+
+library(janitor)
+my_data = clean_names(final_dummy_data,"snake")
+View(my_data)
+```
+
+```{r}
+names(my_data)
+view(my_data)
+
+
+```
+
+# rename
+
+```{r}
+library(dplyr)
+
+my_data <- my_data %>% rename(group_dummy = ownership_dummy)
+```
+
+```{r}
+ 
+# This will calculate the standard deviation for each variable, excluding NA values
+standard_deviations <- sapply(my_data, sd, na.rm = TRUE)
+
+# To view the standard deviations
+print(standard_deviations)
+names(my_data)
+
+```
+
+
+```{r}
+my_data$age = my_data$year - my_data$incorporation_year
+View(my_data)
+
+
+my_data$size = log(my_data$total_assets)
+View(my_data)
+
+my_data$tangible_asset = my_data$net_fixed_assets / my_data$total_assets
+View(my_data)
+names(my_data)
+
+summary(my_data)
+```
+
+
+```{r}
+names(my_data)
+View(my_data)
+```
+
+
+
+#winsorise
+
+```{r}
+library(DescTools)
+my_data$w_total_liabilities <- Winsorize(my_data$total_liabilities_x, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7)
+
+```
+
+
+```{r}
+my_data$w_total_liabilities <- Winsorize(my_data$total_liabilities_x, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7)
+
+```
+
+
+```{r}
+my_data$w_net_fixed_assets <- Winsorize(my_data$net_fixed_assets, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7)
+
+```
+
+
+
+```{r}
+my_data$w_net_intangible_assets <- Winsorize(my_data$net_intangible_assets, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_net_working_capital <- Winsorize(my_data$net_working_capital, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_sales <- Winsorize(my_data$sales, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_return_on_assets <- Winsorize(my_data$return_on_assets, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_current_ratio_times <- Winsorize(my_data$current_ratio_times, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_return_on_capital_employed <- Winsorize(my_data$return_on_capital_employed, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_profit_after_tax <- Winsorize(my_data$profit_after_tax, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_pbdita <- Winsorize(my_data$pbdita, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_capital_employed <- Winsorize(my_data$capital_employed, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_net_sales <- Winsorize(my_data$net_sales, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_total_assets <- Winsorize(my_data$total_assets, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_net_cash_flow_from_operating_activities <- Winsorize(my_data$net_cash_flow_from_operating_activities, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_leverage_ratio_exposure_basel_iii <- Winsorize(my_data$leverage_ratio_exposure_basel_iii, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_promoters_in_percent_shares_held <- Winsorize(my_data$non_promoters_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$non_promoter_institutions_in_percent_shares_held <- Winsorize(my_data$non_promoter_institutions_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_promoter_mutual_funds_uti_in_percent_shares_held <- Winsorize(my_data$non_promoter_mutual_funds_uti_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_promoter_banks_f_is_insurance_cos_in_percent_shares_held <- Winsorize(my_data$non_promoter_banks_f_is_insurance_cos_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_promoter_fi_is_in_percent_shares_held <- Winsorize(my_data$non_promoter_fi_is_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_promoter_venture_capital_funds_in_percent_shares_held <- Winsorize(my_data$non_promoter_venture_capital_funds_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_promoter_foreign_venture_capital_in_percent_shares_held <- Winsorize(my_data$non_promoter_foreign_venture_capital_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_other_institutional_non_promoters_in_percent_shares_held <- Winsorize(my_data$other_institutional_non_promoters_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_adjusted_price <- Winsorize(my_data$adjusted_price, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_promoter_institutions_in_percent_shares_held <- Winsorize(my_data$non_promoter_institutions_in_percent_shares_held, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_market_capitalisation <- Winsorize(my_data$market_capitalisation, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_paid_up_preference_capital_net_of_forfeited_preference_capital <- Winsorize(my_data$paid_up_preference_capital_net_of_forfeited_preference_capital, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_total_liabilities_y <- Winsorize(my_data$total_liabilities_y, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_non_current_liabilities <- Winsorize(my_data$market_capitalisation, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_current_liabilities <- Winsorize(my_data$current_liabilities, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_gross_fixed_assets_depreciation_during_the_year <- Winsorize(my_data$gross_fixed_assets_depreciation_during_the_year, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_current_liabilities <- Winsorize(my_data$current_liabilities, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_tangible_asset <- Winsorize(my_data$tangible_asset, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+```{r}
+my_data$w_tobins_q <- Winsorize(my_data$tobins_q, minval = NULL, maxval = NULL, probs = c(0.05, 0.95),na.rm = FALSE, type = 7) 
+```
+
+
+
+
+
+# clubbing non_promotor
+```{r}
+my_data$non_promotor_instutional = my_data$w_non_promoter_mutual_funds_uti_in_percent_shares_held + my_data$w_non_promoter_banks_f_is_insurance_cos_in_percent_shares_held + my_data$non_promoter_venture_capital_funds_in_percent_shares_held + my_data$non_promoter_foreign_venture_capital_in_percent_shares_held + my_data$w_non_promoter_institutions_in_percent_shares_held
+```
+
+
+
+```{r}
+
+```
+
+# tobinsq
+```{r}
+my_data$tobins_q<-round((my_data$w_market_capitalisation+my_data$w_paid_up_preference_capital_net_of_forfeited_preference_capital+my_data$w_current_liabilities+my_data$w_non_current_liabilities)/(my_data$w_total_assets-my_data$w_gross_fixed_assets_depreciation_during_the_year), digits = 3)
+```
+
+
+```{r}
+summary(my_data)
+names(my_data)
+```
+
+
+# FIXED EFFECT MODEL
+
+```{r}
+
+library(plm)
+fixed <- plm(lag(w_tobins_q) ~  lag(non_promotor_instutional) + lag(p_b) + group_dummy + lag(w_pbdita) + lag(w_market_capitalisation)+ lag(w_tangible_asset)  + lag(age) + lag(size) + lag(w_sales), data=my_data, index=c("variable", "year"), model="within") 
+summary(fixed) 
+
+```
+
+
+```{r}
+
+library(plm)
+fixed1 <- plm( lag(w_return_on_assets) ~  lag(non_promotor_instutional) + lag(p_b) + group_dummy + lag(w_tangible_asset) + lag(age) + lag(size)  , data=my_data, index=c("variable", "year"), model="within") 
+ 
+summary(fixed1)
+```
+
+```{r}
+fixed.time <- plm(lag(w_return_on_assets) ~  lag(non_promotor_instutional) + lag(p_b)  +group_dummy + lag(w_tangible_asset)  + lag(age) + lag(size) + factor(year), data=my_data, index=c("variable", 
+"year"), model="within")
+summary(fixed.time)
+```
+
+
+
+```{r}
+fixed.time <- plm(lag(w_return_on_assets) ~  lag(non_promotor_instutional) + lag(p_b)  +group_dummy + lag(w_tangible_asset)  + lag(age) + lag(size) + factor(industry_group), data=my_data, index=c("variable", 
+"year"), model="within") 
+
+summary(fixed.time) 
+```
+
+
+
+
+```{r}
+names(my_data) 
+```
+
+
+# RANDOM EFFECT MODEL
+
+```{r}
+library(plm)
+random1 <- plm( lag(w_return_on_assets) ~  lag(non_promotor_instutional) + lag(p_b)   +  group_dummy + lag(w_tangible_asset)  + lag(age) + lag(size) , data=my_data, index=c("variable", "year"), model="random") 
+ 
+
+ 
+summary(random1)
+```
+
+
+
+
+
+
+
+```{r}
+library(plm)
+random <- plm( lag(w_tobins_q) ~  lag(non_promotor_instutional) + lag(p_b)   +group_dummy + lag(w_market_capitalisation) +lag(w_pbdita) +   lag(w_tangible_asset)  + lag(age) + lag(size) + lag(w_sales) , data=my_data, index=c("variable", "year"), model="random") 
+ 
+
+ 
+summary(random) 
+```
+
+
+```{r}
+library(plm)
+fixed_between <- plm( w_return_on_assets ~  non_promotor_instutional + p_b   +group_dummy + w_tangible_asset  + age + size , data=my_data, index=c("variable", "year"), model="between") 
+  
+ 
+summary(fixed_between) 
+```
+
+
+
+```{r}
+library(plm)
+fixed_within <- plm( w_return_on_assets ~  non_promotor_instutional + p_b  +group_dummy + w_tangible_asset  + age + size , data=my_data, index=c("variable", "year"), model="random") 
+  
+ 
+summary(fixed_within) 
+```
+
+
+```{r}
+names(my_data)
+```
+
+
+# POOLED OLS
+```{r}
+library(plm)
+pooled <- plm( lag(w_return_on_assets) ~  lag(non_promotor_instutional) + lag(p_b)  +group_dummy + lag(w_tangible_asset)  + lag(age) + lag(size) , data=my_data, index=c("variable", "year"), model="pooling") 
+summary(pooled) 
+```
+```{r}
+library(plm)
+Pooled1 <- plm( lag(w_tobins_q) ~  lag(non_promotor_instutional) + lag(p_b)   +group_dummy + lag(w_market_capitalisation) +lag(w_pbdita) +   lag(w_tangible_asset)  + lag(age) + lag(size) + lag(w_sales) , data=my_data, index=c("variable", "year"), model="pooling") 
+ 
+summary(Pooled1)
+```
+# Hausman
+
+```{r}
+hausman_test <- phtest(fixed1, random1)
+print(hausman_test)
+```
+```{r}
+hausman_test <- phtest(fixed,random)
+print(hausman_test)
+```
+
+
+```{r}
+plmtest(pooled, type=c("bp")) 
+```
+```{r}
+#Code snippet
+library(ggplot2)
+
+ggplot(data, aes(x = non_promoter_institutions_in_percent_shares_held, y = return_on_assets)) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Institutional Ownership vs. Return on Assets",
+       x = "Non-Promoter Institutional Ownership (%)",
+       y = "Return on Assets") +
+  theme_classic()
+```
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+ggplot(my_data, aes(x = non_promoter_institutions_in_percent_shares_held, y = return_on_assets, color = size)) +
+  geom_point() +
+  labs(title = "Interaction of Institutional Ownership and Size on Profitability",
+       x = "Institutional Ownership (%)",
+       y = "Return on Assets") +
+  theme_classic()
+
+```
+
+
+```{r}
+names(my_data)
+```
+```{r}
+# Assuming 'panel_data' is your panel dataset
+# and 'variables' is a vector of the column names for which you want the correlation matrix
+
+# Select the variables for the correlation matrix
+selected_data <- my_data[,c("w_return_on_assets","age","size","non_promotor_instutional","w_tangible_asset")]
+
+# Calculate the correlation matrix
+cor_matrix <- cor(selected_data, use = "pairwise.complete.obs")
+
+# Print the correlation matrix
+print(cor_matrix)
+
+```
+```{r}
+ibrary(ggcorrplot)
+library(corrplot)
+corr_matrix<- cor(selected_data )
+ggcorrplot(corr_matrix)
+
+```
+```{r}
+
+```
+
+
+
+
+
+
+
+
